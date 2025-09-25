@@ -51,6 +51,12 @@ Vemto's architecture revolves around a comprehensive execution cycle that handle
 The following flowchart illustrates the main execution cycle of Vemto:
 
 ```mermaid
+---
+config:
+  theme: base
+  layout: dagre
+  look: neo
+---
 flowchart TD
     A[User connects to Laravel project] --> B[Create .vemto folder if needed]
     B --> C[Run db-reader PHP app to read schema]
