@@ -1,0 +1,115 @@
+<% let viewsFolder = this.viewsFolder %>
+<% let entityName = this.crud.model.name %>
+<% let entityNamePlural = this.crud.model.plural %>
+<% let inputs = this.crud.inputs %>
+<% let project = this.project %>
+<% const camelCase = this.require('camelCase') %>
+import { Head, Link, router } from '@inertiajs/react';
+import { IconAdd, IconSearch } from '@/components/ActionIcons';
+import { CustomPagination } from '@/components/CustomPagination';
+import { HeadingApp } from '@/components/HeadingApp';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { usePermissions } from '@/hooks/usePermissions';
+import AppLayout from '@/layouts/app-layout';
+import { <$ entityName $>Entity } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/entities/<$ entityName $>.entity';
+import { <$ entityName $>Table } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/table/<$ entityName $>.table';
+import <$ camelCase(entityNamePlural) $> from '@/routes/<$ camelCase(entityNamePlural) $>';
+import { BreadcrumbItem } from '@/types';
+import { PaginationListing } from '@/types/pagination-listing';
+import { ListFilter, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'List of <$ camelCase(entityName) $>',
+    href: <$ camelCase(entityNamePlural) $>.index().url,
+  },
+];
+
+export default function <$ entityName $>IndexPage({ <$ camelCase(entityName) $>List, search }: { <$ camelCase(entityName) $>List: PaginationListing<<$ entityName $>Entity[]>; search: string }) {
+  const { can } = usePermissions();
+  const [filters, setFilters] = useState({
+    search: search,
+    page: 1,
+  });
+
+  const debouncedSearch = useDebouncedCallback((newFilters) => {
+    router.get(<$ camelCase(entityNamePlural) $>.index().url, { ...newFilters }, { preserveState: true, replace: true });
+  }, 300);
+
+  useEffect(() => {
+    debouncedSearch(filters);
+  }, [filters, debouncedSearch]);
+
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="List of <$ camelCase(entityName) $>" />
+
+      <div className="container mx-auto p-4">
+        <HeadingApp heading={'<$ entityNamePlural $>'} description="Add a description">
+          {can('<$ camelCase(entityNamePlural) $>.create') && (
+            <Link href={<$ camelCase(entityNamePlural) $>.create().url}>
+              <Button className={'btn'}>
+                <IconAdd className="h-6 w-6 stroke-primary-foreground" />
+                Create new <$ camelCase(entityName) $>
+              </Button>
+            </Link>
+          )}
+        </HeadingApp>
+
+        <div className={'flex w-full justify-center'}>
+          <div className={'my-2 w-full space-y-2 px-4 md:w-8/12'}>
+            <Label className={'flex items-center'}>
+              <ListFilter className="h-[20px] w-[20px] stroke-foreground" />
+              Search a <$ camelCase(entityName) $>
+            </Label>
+            <div className="relative flex h-fit w-[100%] cursor-pointer">
+              <div className="relative flex w-full py-1">
+                <div className="absolute top-0 flex h-12 w-12 items-center justify-center">
+                  <div className="text-muted-foreground">
+                    <IconSearch className="h-6 w-6 stroke-muted-foreground" />
+                  </div>
+                </div>
+                <Input
+                  name="search"
+                  value={filters.search}
+                  type="text"
+                  onChange={(event) => {
+                    setFilters({
+                      ...filters,
+                      search: event.target.value,
+                      page: 1,
+                    });
+                  }}
+                  className={'px-[12px] pl-[50px]'}
+                  placeholder="Search..."
+                />
+
+                <div
+                  className="absolute top-0 right-3 flex h-12 items-center justify-end text-muted-foreground"
+                  onClick={() => setFilters({ ...filters, search: '', page: 1 })}
+                >
+                  {filters.search !== '' && <X className="size-6 stroke-muted-foreground" />}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {<$ camelCase(entityName) $>List.data.length > 0 && (
+          <>
+            <<$ entityName $>Table <$ camelCase(entityName) $>List={<$ camelCase(entityName) $>List.data} />
+            <CustomPagination
+              currentPage={<$ camelCase(entityName) $>List.current_page}
+              totalPages={<$ camelCase(entityName) $>List.last_page}
+              onPageChange={(page) => setFilters({ ...filters, page })}
+            />
+          </>
+        )}
+      </div>
+    </AppLayout>
+  );
+}

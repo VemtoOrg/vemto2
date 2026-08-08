@@ -1,7 +1,7 @@
 import Main from "../wrappers/Main"
 import PathUtil from "@Common/util/PathUtil"
 import { ProjectCssFramework, ProjectUIStarterKit } from "@Common/models/Project"
-import { validateAndParse as getVersionMatches } from 'compare-versions/lib/esm/utils'
+import { validateAndParse as getVersionMatches } from "compare-versions/lib/esm/utils"
 import EnvParser from "@Common/util/EnvParser"
 
 export default class ProjectInfo {
@@ -55,11 +55,9 @@ export default class ProjectInfo {
 
         this.phpVersion = this.getComposerPackageVersion("php") || "8.0"
         this.isLaravelProject = this.hasComposerPackage("laravel/framework")
-        this.laravelVersion =
-            this.getComposerPackageVersion("laravel/framework")
+        this.laravelVersion = this.getComposerPackageVersion("laravel/framework")
         this.hasJetstream = this.hasComposerPackage("laravel/jetstream")
-        this.jetsreamVersion =
-            this.getComposerPackageVersion("laravel/jetstream")
+        this.jetsreamVersion = this.getComposerPackageVersion("laravel/jetstream")
         this.hasBreeze = this.hasComposerPackage("laravel/breeze") || this.hasComposerDevPackage("laravel/breeze")
         this.breezeVersion = this.getComposerPackageVersion("laravel/breeze") || this.getComposerPackageVersion("laravel/breeze")
         this.hasLaravelUi = this.hasComposerPackage("laravel/ui")
@@ -71,13 +69,11 @@ export default class ProjectInfo {
         this.hasTailwind = this.hasPackageDependency("tailwindcss")
         this.tailwindVersion = this.getPackageDependencyVersion("tailwindcss")
         this.hasLivewire = this.hasComposerPackage("livewire/livewire")
-        this.livewireVersion =
-            this.getComposerPackageVersion("livewire/livewire")
+        this.livewireVersion = this.getComposerPackageVersion("livewire/livewire")
         this.hasBootstrap = this.hasPackageDependency("bootstrap")
         this.bootstrapVersion = this.getPackageDependencyVersion("bootstrap")
         this.hasInertia = this.hasPackageDependency("@inertiajs/inertia")
-        this.inertiaVersion =
-            this.getPackageDependencyVersion("@inertiajs/inertia")
+        this.inertiaVersion = this.getPackageDependencyVersion("@inertiajs/inertia")
         this.hasVue = this.hasPackageDependency("vue")
         this.vueVersion = this.getPackageDependencyVersion("vue")
         this.hasReact = this.hasPackageDependency("react")
@@ -87,6 +83,7 @@ export default class ProjectInfo {
     }
 
     getStarterKit(): ProjectUIStarterKit {
+        if (this.hasReact) return ProjectUIStarterKit.REACT
         if (this.hasJetstream) return ProjectUIStarterKit.JETSTREAM
         if (this.hasBreeze) return ProjectUIStarterKit.BREEZE
         if (this.hasLaravelUi) return ProjectUIStarterKit.LARAVEL_UI
@@ -102,22 +99,16 @@ export default class ProjectInfo {
     }
 
     hasComposerPackage(packageName: string): boolean {
-        return (
-            !!this.composerData.require &&
-            !!this.composerData.require[packageName]
-        )
+        return !!this.composerData.require && !!this.composerData.require[packageName]
     }
 
     hasComposerDevPackage(packageName: string): boolean {
-        return (
-            !!this.composerData["require-dev"] &&
-            !!this.composerData["require-dev"][packageName]
-        )
+        return !!this.composerData["require-dev"] && !!this.composerData["require-dev"][packageName]
     }
 
     getComposerPackageVersion(packageName: string): string {
         const hasComposerPackage = this.hasComposerPackage(packageName),
-              hasComposerDevPackage = this.hasComposerDevPackage(packageName)
+            hasComposerDevPackage = this.hasComposerDevPackage(packageName)
 
         if (!hasComposerPackage && !hasComposerDevPackage) return ""
 
@@ -125,7 +116,7 @@ export default class ProjectInfo {
             sliceLength: number = 0,
             composerVersion = this.composerData.require[packageName] || this.composerData["require-dev"][packageName]
 
-        if(composerVersion === "*") return "*"
+        if (composerVersion === "*") return "*"
 
         try {
             packageVersion = getVersionMatches(composerVersion)
@@ -139,10 +130,8 @@ export default class ProjectInfo {
 
     hasPackageDependency(packageName: string): boolean {
         return (
-            (!!this.packageData.devDependencies &&
-                !!this.packageData.devDependencies[packageName]) ||
-            (!!this.packageData.dependencies &&
-                !!this.packageData.dependencies[packageName])
+            (!!this.packageData.devDependencies && !!this.packageData.devDependencies[packageName]) ||
+            (!!this.packageData.dependencies && !!this.packageData.dependencies[packageName])
         )
     }
 
@@ -151,20 +140,16 @@ export default class ProjectInfo {
             return ""
         }
 
-        if(!this.packageData.devDependencies) {
+        if (!this.packageData.devDependencies) {
             return this.packageData.dependencies[packageName] || ""
         }
 
-        return this.packageData.devDependencies[packageName]
-            || (!!this.packageData.dependencies && this.packageData.dependencies[packageName])
-            || ""
+        return this.packageData.devDependencies[packageName] || (!!this.packageData.dependencies && this.packageData.dependencies[packageName]) || ""
     }
 
     async readComposerJson(): Promise<any> {
         try {
-            const composerData = await Main.API.readFile(
-                PathUtil.join(this.path, "composer.json")
-            )
+            const composerData = await Main.API.readFile(PathUtil.join(this.path, "composer.json"))
 
             return JSON.parse(composerData) || {}
         } catch (e) {
@@ -174,9 +159,7 @@ export default class ProjectInfo {
 
     async readPackageJson(): Promise<any> {
         try {
-            const packageData = await Main.API.readFile(
-                PathUtil.join(this.path, "package.json")
-            )
+            const packageData = await Main.API.readFile(PathUtil.join(this.path, "package.json"))
 
             return JSON.parse(packageData) || {}
         } catch (e) {
@@ -186,9 +169,7 @@ export default class ProjectInfo {
 
     async readEnvFile(): Promise<any> {
         try {
-            const envData = await Main.API.readFile(
-                PathUtil.join(this.path, ".env")
-            )
+            const envData = await Main.API.readFile(PathUtil.join(this.path, ".env"))
 
             return new EnvParser(envData)
         } catch (e) {
@@ -198,14 +179,10 @@ export default class ProjectInfo {
 
     async readSettingsFile(): Promise<any> {
         try {
-            let settingsData = await Main.API.readFile(
-                PathUtil.join(this.path, ".vemto_settings")
-            )
+            let settingsData = await Main.API.readFile(PathUtil.join(this.path, ".vemto_settings"))
 
             if (!settingsData) {
-                settingsData = await Main.API.readFile(
-                    PathUtil.join(this.path, ".vemto_settings.example")
-                )
+                settingsData = await Main.API.readFile(PathUtil.join(this.path, ".vemto_settings.example"))
             }
 
             if (!settingsData) {
@@ -220,7 +197,7 @@ export default class ProjectInfo {
 
     async isAlreadyConnected(): Promise<boolean> {
         const vemtoFolder = PathUtil.join(this.path, ".vemto")
-        
+
         return await Main.API.folderExists(vemtoFolder)
     }
 

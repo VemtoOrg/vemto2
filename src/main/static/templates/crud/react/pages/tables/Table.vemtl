@@ -1,0 +1,99 @@
+<% let viewsFolder = this.viewsFolder %>
+<% let entityName = this.crud.model.name %>
+<% let entityNamePlural = this.crud.model.plural %>
+<% let inputs = this.crud.getInputsForIndex() %>
+<% let project = this.project %>
+<% const camelCase = this.require('camelCase') %>
+import { Link } from '@inertiajs/react';
+import { IconEdit, IconShow } from '@/components/ActionIcons';
+import { DeleteModal } from '@/components/DeleteModal';
+import { Button } from '@/components/ui/button';
+import { Table, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { usePermissions } from '@/hooks/usePermissions';
+import { <$ entityName $>Entity } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/entities/<$ entityName $>.entity';
+import <$ camelCase(entityNamePlural) $> from '@/routes/<$ camelCase(entityNamePlural) $>';
+import { motion } from 'motion/react';
+
+const container = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const item = {
+  hidden: { y: 50, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
+
+const duration = { duration: 0.1 };
+
+export const <$ entityName $>Table = ({ <$ camelCase(entityName) $>List }: { <$ camelCase(entityName) $>List: <$ entityName $>Entity[] }) => {
+  const { can } = usePermissions();
+
+  return (
+    <Table className={'mt-4 w-full'}>
+      <TableHeader className={'border-y-2'}>
+        <TableRow className={'hover:bg-transparent'}>
+        <% for(let input of inputs) { %>
+          <TableHead className="text-start"><$ project.getTranslation("en", input.label) $></TableHead>
+        <% } %>
+          <TableHead className="text-end">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <motion.tbody className={'[&_tr:last-child]:border-0'} initial="hidden" animate="visible" variants={container}>
+        {<$ camelCase(entityName) $>List?.map((<$ camelCase(entityName) $>, index) => (
+          <motion.tr
+            key={index}
+            variants={item}
+            transition={duration}
+            className="cursor-pointer border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+          >
+          <% for(let input of inputs) { %>
+            <% if(input.column.name == 'id') { %>
+              <TableCell className="rounded-s-x text-start text-muted-foreground">{<$ camelCase(entityName) $>.<$ input.column.name $>}</TableCell>
+            <% } else { %>
+              <TableCell className="text-start text-muted-foreground">{<$ camelCase(entityName) $>.<$ input.column.name $>}</TableCell>
+            <% } %>
+          <% } %>
+            <TableCell className="rounded-e-xl text-left">
+              <div className={'flex justify-end space-x-2'}>
+                {can('<$ camelCase(entityNamePlural) $>.view') && (
+                  <Button asChild variant={'outline'} className="flex h-[38px] w-[38px] items-center justify-center rounded-lg border-2">
+                    <Link href={<$ camelCase(entityNamePlural) $>.show(<$ camelCase(entityName) $>.id).url}>
+                      <IconShow className="h-[25px] w-[25px] stroke-foreground" />
+                    </Link>
+                  </Button>
+                )}
+
+                {can('<$ camelCase(entityNamePlural) $>.update') && (
+                  <Button asChild variant={'outline'} className="flex h-[38px] w-[38px] items-center justify-center rounded-lg border-2">
+                    <Link href={<$ camelCase(entityNamePlural) $>.edit(<$ camelCase(entityName) $>.id).url}>
+                      <IconEdit className="h-[25px] w-[25px] stroke-foreground" />
+                    </Link>
+                  </Button>
+                )}
+
+                {can('<$ camelCase(entityNamePlural) $>.delete') && (
+                  <DeleteModal
+                    title={'Are you secure of delete this <$ camelCase(entityName) $>?'}
+                    body={
+                      <>
+                        Eliminará permanentemente el cliente
+                        <span className={'text-primary'}> &quot;{<$ camelCase(entityName) $>.id}&quot; </span>y lo quitará de nuestros servidores.
+                      </>
+                    }
+                    textBtn={'<$ camelCase(entityName) $>'}
+                    entity={<$ camelCase(entityName) $>}
+                  />
+                )}
+              </div>
+            </TableCell>
+          </motion.tr>
+        ))}
+      </motion.tbody>
+    </Table>
+  );
+};

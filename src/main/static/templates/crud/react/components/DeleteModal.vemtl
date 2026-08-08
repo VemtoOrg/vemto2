@@ -1,0 +1,48 @@
+<% let entityNamePlural = this.crud.model.plural %>
+<% const camelCase = this.require('camelCase') %>
+import { router } from '@inertiajs/react';
+import { IconDelete } from '@/components/ActionIcons';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import <$ camelCase(entityNamePlural) $> from '@/routes/<$ camelCase(entityNamePlural) $>';
+import { ReactNode, useState } from 'react';
+
+export function DeleteModal<T>({ title, body, textBtn, entity }: { title: string; body: ReactNode; textBtn: string; entity: T }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    // @ts-ignore
+    router.delete(<$ camelCase(entityNamePlural) $>.destroy(entity.id).url, {
+      onSuccess: () => {
+        setIsOpen(false);
+        setIsDeleting(false);
+      },
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant={'outline'} className="flex h-[38px] w-[38px] items-center justify-center border-2 bg-background hover:border-destructive">
+          <IconDelete className="h-[25px] w-[25px] stroke-destructive" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="!text-headline-medium leading-normal font-bold text-foreground">{title}</DialogTitle>
+          <DialogDescription className={'mt-3 text-xl font-normal text-muted-foreground'}>{body}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className={'mt-4 space-x-6'}>
+          <Button variant="outline" className={'btn'} onClick={() => setIsOpen(false)} disabled={isDeleting}>
+            Cancelar
+          </Button>
+          <Button variant={'destructive'} className={'btn'} onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? 'Eliminando...' : `Eliminar ${textBtn}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

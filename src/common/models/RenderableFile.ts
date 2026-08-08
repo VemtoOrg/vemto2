@@ -1,40 +1,44 @@
-import PathUtil from '@Common/util/PathUtil'
-import Project from './Project'
-import RelaDB from '@tiago_silva_pereira/reladb'
+import PathUtil from "@Common/util/PathUtil"
+import Project from "./Project"
+import RelaDB from "@tiago_silva_pereira/reladb"
 
 export enum RenderableFileType {
-    HTML = 'html',
-    PHP = 'php',
-    BLADE = 'blade',
-    JS = 'js',
-    CSS = 'css',
-    SCSS = 'scss',
-    JSON = 'json',
-    ENV = 'env',
-    TXT = 'txt',
+    HTML = "html",
+    PHP = "php",
+    BLADE = "blade",
+    JS = "js",
+    TSX = "tsx",
+    TS = "ts",
+    CSS = "css",
+    SCSS = "scss",
+    JSON = "json",
+    ENV = "env",
+    TXT = "txt",
 }
 
 export enum RenderableFileFormatter {
-    NONE = 'none',
-    PHP = 'php',
-    HTML = 'html',
-    BLADE = 'blade',
-    JAVASCRIPT = 'javascript',
+    NONE = "none",
+    PHP = "php",
+    HTML = "html",
+    BLADE = "blade",
+    TSX = "tsx",
+    TS = "ts",
+    JAVASCRIPT = "javascript",
 }
 
 export enum RenderableFileStatus {
-    IDLE = 'idle',
-    PREPARING = 'preparing',
-    PENDING = 'pending',
-    RENDERING = 'rendering',
-    RENDERED = 'rendered',
-    ERROR = 'error',
-    CONFLICT = 'conflict',
-    ASK_TO_REMOVE = 'to-be-removed',
-    CAN_REMOVE = 'can-remove',
-    REMOVED = 'removed',
-    IGNORED = 'ignored',
-    SKIPPED = 'skipped'
+    IDLE = "idle",
+    PREPARING = "preparing",
+    PENDING = "pending",
+    RENDERING = "rendering",
+    RENDERED = "rendered",
+    ERROR = "error",
+    CONFLICT = "conflict",
+    ASK_TO_REMOVE = "to-be-removed",
+    CAN_REMOVE = "can-remove",
+    REMOVED = "removed",
+    IGNORED = "ignored",
+    SKIPPED = "skipped",
 }
 
 export default class RenderableFile extends RelaDB.Model {
@@ -80,8 +84,8 @@ export default class RenderableFile extends RelaDB.Model {
     }
 
     setContent(content: string) {
-        if(this.status === RenderableFileStatus.IDLE) return
-        if(this.status === RenderableFileStatus.PENDING) return
+        if (this.status === RenderableFileStatus.IDLE) return
+        if (this.status === RenderableFileStatus.PENDING) return
 
         this.content = content
 

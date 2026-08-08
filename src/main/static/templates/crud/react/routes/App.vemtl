@@ -1,0 +1,18 @@
+<?php
+<% let folderName = this.folderName %>
+<% let routeName = this.routeName %>
+<% let modelName = this.modelName %>
+<% let controllerName = this.controllerName %>
+use App\Http\Controllers\<$ folderName $>\<$ controllerName $>;
+use Illuminate\Support\Facades\Route;
+
+/** <$ folderName $> routes */
+Route::middleware('auth')->prefix('<$ routeName $>')->group(function () {
+  Route::get('/', [<$ controllerName $>::class, 'index'])->name('<$ routeName $>.index');
+  Route::get('create', [<$ controllerName $>::class, 'create'])->name('<$ routeName $>.create');
+  Route::post('store', [<$ controllerName $>::class, 'store'])->name('<$ routeName $>.store');
+  Route::get('{<$ modelName $>}', [<$ controllerName $>::class, 'show'])->name('<$ routeName $>.show');
+  Route::get('{<$ modelName $>}/edit', [<$ controllerName $>::class, 'edit'])->name('<$ routeName $>.edit');
+  Route::post('{<$ modelName $>}/update', [<$ controllerName $>::class, 'update'])->name('<$ routeName $>.update');
+  Route::delete('{<$ modelName $>}/destroy', [<$ controllerName $>::class, 'destroy'])->name('<$ routeName $>.destroy');
+});

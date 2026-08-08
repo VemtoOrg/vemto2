@@ -149,13 +149,13 @@
         settings.value = {
             path: "",
             name: "",
-            starterKit: "jetstream",
+            starterKit: "react",
             database: "mysql"
         } as ProjectCreatorData
     }
 
     const onStarterKitChanged = () => {
-        if(!["jetstream", "breeze", "empty", "api"].includes(settings.value.starterKit)) {
+        if(!["react", "jetstream", "breeze", "empty", "api"].includes(settings.value.starterKit)) {
             errors.value.starterKit = "Invalid starter kit"
             return
         }
@@ -219,6 +219,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <UiSelect v-model="settings.starterKit" label="UI Starter Kit" @change="onStarterKitChanged">
+                            <option value="react">React Starter Kit</option>
                             <option value="jetstream">Jetstream</option>
                             <option value="breeze">Breeze</option>
                             <option value="api">API</option>

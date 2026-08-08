@@ -1,0 +1,64 @@
+import { Link } from '@inertiajs/react';
+import { IconBack } from '@/components/ActionIcons';
+import { cn } from '@/lib/utils';
+import { CornerUpLeft } from 'lucide-react';
+import { ReactNode } from 'react';
+
+/**
+ * HeadingApp.
+ *
+ * @param heading
+ * @param description
+ * @param route
+ * @param children
+ * @param centered
+ * @constructor
+ */
+export const HeadingApp = ({
+  heading,
+  description,
+  url,
+  children,
+  centered,
+}: {
+  heading: string;
+  description: string;
+  url?: string;
+  children?: ReactNode;
+  centered?: boolean;
+}) => {
+  return (
+    <>
+      <div
+        className={cn({
+          'justify-center': centered,
+          'lg:justify-between': !centered,
+          'flex flex-wrap items-center justify-center gap-4 lg:flex-nowrap': true,
+        })}
+      >
+        <div className="flex w-full items-center gap-4">
+          <div className="flex w-full gap-1">
+            {url && (
+              <Link href={url} className={'flex pt-1 text-foreground'}>
+                <IconBack className="mr-4 h-45 stroke-foreground" />
+              </Link>
+            )}
+            <div
+              className={cn({
+                'text-center': centered,
+                'md:text-left': !centered,
+                'grid w-full items-center': true,
+              })}
+            >
+              <h1 className="text-page-title w-full font-medium tracking-tight text-foreground">{heading}</h1>
+              <p className="w-full !font-light text-muted-foreground">{description}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-center space-x-3 md:justify-end">{children}</div>
+      </div>
+
+      <hr className="mt-3 mb-6 w-full border-border" />
+    </>
+  );
+};

@@ -18,11 +18,12 @@ import GenerateCrudApiFiles from "./services/crud/GenerateCrudApiFiles"
 import GenerateNovaResources from "./services/crud/GenerateNovaResources"
 import AddRoutesToServiceProvider from "./services/routes/AddRoutesToServiceProvider"
 import BlueprintSchemaUpdater from "@Renderer/services/schema/BlueprintSchemaUpdater"
+import GenerateReactFiles from "@Renderer/codegen/sequential/services/crud/GenerateReactFiles"
 
 export default class SequentialGenerator {
     static startTime: number = 0
     static elapsedTime: number = 0
-    
+
     project: Project
     static running: boolean = false
 
@@ -43,13 +44,13 @@ export default class SequentialGenerator {
             await this.runGeneration()
         } catch (error) {
             console.error("Error while running generation: ", error)
-            
+
             throw error
         }
     }
 
     async runGeneration(): Promise<boolean> {
-        if(SequentialGenerator.running) {
+        if (SequentialGenerator.running) {
             throw new Error("Generation is already running")
         }
 
@@ -64,9 +65,9 @@ export default class SequentialGenerator {
         this.project.setFilesQueueStatusProcessing()
         this.project.clearCurrentRenderedFilesPaths()
         this.project.clearRemovedRenderableFiles()
-        
+
         this.project.clearSkippedRenderableFiles()
-        
+
         await this.calculateSkippedFilesByMissingDependencies()
 
         await this.runGeneratorsServices()
@@ -89,8 +90,8 @@ export default class SequentialGenerator {
     async calculateSkippedFilesByMissingDependencies() {
         let templatePaths = []
 
-        const composerMissingDependencies = this.packageChecker.getComposerMissingDependencies(),
-            packagesMissingDependencies = this.packageChecker.getPackagesMissingDependencies()
+        const composerMissingDependencies = this.packageChecker.getComposerMissingDependencies()
+        const packagesMissingDependencies = this.packageChecker.getPackagesMissingDependencies()
 
         composerMissingDependencies.forEach((dependency) => {
             templatePaths.push(...dependency.templatePaths)
@@ -104,9 +105,7 @@ export default class SequentialGenerator {
 
         templatePaths.forEach((path: string) => {
             const renderableFile: RenderableFile = this.project.fresh().getRenderableFileByTemplatePath(path)
-
-            if(!renderableFile) return
-
+            if (!renderableFile) return
             renderableFile.setAsSkipped()
         })
     }
@@ -128,32 +127,42 @@ export default class SequentialGenerator {
     /**
      * IMPORTANT: all services that write files using renderables can be directly called here.
      * If a service writes a file directly using API.writeFile or similar, it should be called inside
-     * the generateNotRenderedFiles method. It is necessary to avoid writing files when running 
+     * the generateNotRenderedFiles method. It is necessary to avoid writing files when running
      * in the checker mode.
      */
     async runGeneratorsServices() {
-        // Generating not rendered files
-        await this.generateNotRenderedFiles()
-
-        // --------------------------------------------
-
         // Generating rendered files
-        await new GenerateUiComponentsFiles().start(this.project)
-
-        await new GenerateMenu().start(this.project)
-
-        await new GenerateRoutes().start(this.project)
-        
         await new GenerateModelFiles().start()
-        await new GenerateCrudFiles().start()
-        await new GenerateCrudApiFiles().start(this.project)
-        await new GenerateFilamentResources().start()
-        await new GenerateNovaResources().start()
-        await new GeneratePageFiles().start()
-        
         await new GenerateDatabaseSeeder().start()
 
-        await new GenerateLivewireLayout().start(this.project)
+        /**
+         * The following services generate files that are specific to certain project types.
+         * They should only be executed if the project is of the appropriate type.
+         * For example, UI components, menus, routes, CRUD files, Filament and Nova resources,
+         * page files, and Livewire layouts are only relevant for Breeze, Jetstream, or API Starter Kit projects.
+         */
+        if (!this.project.isReactApp()) {
+            // Generating not rendered files
+            await this.generateNotRenderedFiles()
+            await new GenerateUiComponentsFiles().start(this.project)
+            await new GenerateMenu().start(this.project)
+            await new GenerateRoutes().start(this.project)
+            await new GenerateCrudFiles().start()
+            await new GenerateCrudApiFiles().start(this.project)
+            await new GenerateFilamentResources().start()
+            await new GenerateNovaResources().start()
+            await new GeneratePageFiles().start()
+            await new GenerateLivewireLayout().start(this.project)
+        }
+
+        /**
+         * React files generation
+         * This service generates React files and should only be executed if the project
+         * is identified as a React application.
+         */
+        if (this.project.isReactApp()) {
+            await new GenerateReactFiles().start()
+        }
     }
 
     /**
@@ -164,7 +173,7 @@ export default class SequentialGenerator {
      * checker mode should only check for missing dependencies and not write any files.
      */
     async generateNotRenderedFiles() {
-        if(Renderable.isCheckerMode()) {
+        if (Renderable.isCheckerMode()) {
             console.log("Skipping not rendered files generation because it is running in checker mode")
             return
         }
@@ -185,18 +194,18 @@ export default class SequentialGenerator {
     }
 
     async waitForProcessingFilesQueue() {
-        while(this.project.fresh().processingFilesQueue()) {
-            await new Promise(resolve => setTimeout(resolve, 500))
+        while (this.project.fresh().processingFilesQueue()) {
+            await new Promise((resolve) => setTimeout(resolve, 500))
         }
     }
 
     async readSchema() {
         // If blueprint mode is enabled, just update the models with the new changes,
         // without rebuilding the them from the application's source code.
-        if(this.project.isBlueprintModeEnabled()) {
+        if (this.project.isBlueprintModeEnabled()) {
             const blueprintSchemaUpdater = new BlueprintSchemaUpdater(this.project)
             await blueprintSchemaUpdater.updateModels()
-            
+
             return
         }
 

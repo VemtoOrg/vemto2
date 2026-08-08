@@ -1,0 +1,27 @@
+<% let viewsFolder = this.viewsFolder %>
+<% let entityName = this.crud.model.name %>
+<% const camelCase = this.require('camelCase') %>
+import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { <$ entityName $>Form } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/form/<$ entityName $>.form';
+import <$ camelCase(this.crud.model.plural) $> from '@/routes/<$ camelCase(this.crud.model.plural) $>';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Add new <$ camelCase(entityName) $>',
+    href: <$ camelCase(this.crud.model.plural) $>.index().url,
+  },
+];
+
+export default function <$ entityName $>CreatePage() {
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="Add new <$ camelCase(entityName) $>" />
+
+      <div className="container mx-auto p-4">
+        <<$ entityName $>Form isEdit={false} />
+      </div>
+    </AppLayout>
+  );
+}

@@ -58,6 +58,7 @@ export enum ProjectCssFramework {
 }
 
 export enum ProjectUIStarterKit {
+    REACT = "react",
     JETSTREAM = "jetstream",
     BREEZE = "breeze",
     LARAVEL_UI = "laravel_ui",
@@ -890,6 +891,10 @@ export default class Project extends RelaDB.Model {
 
     laravelVersionLessThanOrEqualTo(version: string): boolean {
         return compareVersions(this.settings.laravelVersion, version) <= 0
+    }
+
+    isReactApp(): boolean {
+        return this.settings.uiStarterKit === ProjectUIStarterKit.REACT
     }
 
     isJetstream(): boolean {

@@ -1,0 +1,55 @@
+<% let viewsFolder = this.viewsFolder %>
+<% let entityName = this.crud.model.name %>
+<% let entityNamePlural = this.crud.model.plural %>
+<% let project = this.project %>
+<% let inputs = this.crud.getInputsForIndex() %>
+<% const camelCase = this.require('camelCase') %>
+import { Head, Link } from '@inertiajs/react';
+import { IconUpdate } from '@/components/ActionIcons';
+import { HeadingApp } from '@/components/HeadingApp';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { usePermissions } from '@/hooks/usePermissions';
+import AppLayout from '@/layouts/app-layout';
+import { <$ entityName $>Entity } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/entities/<$ entityName $>.entity';
+import <$ camelCase(entityNamePlural) $> from '@/routes/<$ camelCase(entityNamePlural) $>';
+
+/**
+ * <$ entityName $> show page.
+ */
+export default function <$ entityName $>ShowPage({ <$ camelCase(entityName) $> }: { <$ camelCase(entityName) $>: <$ entityName $>Entity }) {
+  const { can } = usePermissions();
+
+  return (
+    <AppLayout>
+      <Head title="Details of <$ camelCase(entityName) $>" />
+
+      <div className="container mx-auto max-w-6xl px-4 pt-4">
+        <HeadingApp heading={'Details of <$ camelCase(entityName) $> #: ' + <$ camelCase(entityName) $>.id} description={'Show the details of <$ camelCase(entityName) $>.'} url={<$ camelCase(entityNamePlural) $>.index().url}>
+          {can('<$ camelCase(entityNamePlural) $>.update') && (
+            <Button asChild>
+              <Link href={<$ camelCase(entityNamePlural) $>.edit(<$ camelCase(entityName) $>.id).url} className={'btn'}>
+                <IconUpdate className="h-6 w-6 stroke-primary-foreground" />
+                Edit <$ camelCase(entityName) $>
+              </Link>
+            </Button>
+          )}
+        </HeadingApp>
+
+        <Card className={'mt-5 border-0 p-2'}>
+          <CardContent>
+            <div className={'mt-5 flex flex-wrap'}>
+            <% for(let input of inputs) { %>
+              <div className={'mb-6 w-full !px-1 lg:w-4/12'}>
+                <Label className="label font-medium text-foreground"><$ project.getTranslation("en", input.label) $></Label>
+                <span className="font-light text-muted-foreground">{<$ camelCase(entityName) $>.<$ input.column.name $>}</span>
+              </div>
+            <% } %>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  );
+}

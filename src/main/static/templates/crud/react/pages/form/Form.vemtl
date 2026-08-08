@@ -1,0 +1,167 @@
+<% let viewsFolder = this.viewsFolder %>
+<% let entityName = this.crud.model.name %>
+<% let entityNamePlural = this.crud.model.plural %>
+<% let inputs = this.crud.inputs %>
+<% let inputTypes = this.inputTypes %>
+<% let project = this.project %>
+<% const camelCase = this.require('camelCase') %>
+import { useForm } from '@inertiajs/react';
+import { IconSaved, IconUpdate } from '@/components/ActionIcons';
+import { HeadingApp } from '@/components/HeadingApp';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+<% for (let inputType of inputTypes) { %>
+<% if (inputType === "checkbox") { %>
+import { Checkbox } from '@/components/ui/checkbox';
+<% } %>
+<% if (inputType === "text") { %>
+import { Input } from '@/components/ui/input';
+<% } %>
+<% if (inputType === "select") { %>
+import { Select, SelectContent, SelectGroup, SelectTrigger, SelectValue } from '@/components/ui/select';
+<% } %>
+<% if (inputType === "textarea") { %>
+import { Textarea } from '@/components/ui/textarea';
+<% } %>
+<% } %>
+import { Label } from '@/components/ui/label';
+import { <$ entityName $>Entity, <$ camelCase(entityName) $>EntityInitial } from '@/pages/<$ viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/entities/<$ entityName $>.entity';
+import <$ camelCase(entityNamePlural) $> from '@/routes/<$ camelCase(entityNamePlural) $>';
+import { FormEvent, FormEventHandler, useState } from 'react';
+import { toast } from 'sonner';
+
+/**
+ * <$ entityName $>Form component.
+ *
+ * @param isEdit
+ * @param <$ camelCase(entityName) $>
+ * @constructor
+ */
+export const <$ entityName $>Form = ({ isEdit, <$ camelCase(entityName) $> }: { isEdit: boolean; <$ camelCase(entityName) $>?: <$ entityName $>Entity }) => {
+  const initFormData = <$ camelCase(entityName) $> ? <$ camelCase(entityName) $> : <$ camelCase(entityName) $>EntityInitial;
+  const { data, setData, post, errors } = useForm<<$ entityName $>Entity>(initFormData);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const onSubmit: FormEventHandler = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (isEdit) {
+      post(<$ camelCase(entityNamePlural) $>.update(data.id).url, {
+        onSuccess: () => {
+          toast('<$ entityName $> updated successfully.');
+        },
+      });
+    } else {
+      post(<$ camelCase(entityNamePlural) $>.store().url, {
+        onSuccess: () => {
+          setIsSubmitting(false);
+          toast('The <$ camelCase(entityName) $> has been created successfully.');
+        },
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="container mx-auto">
+        <HeadingApp
+          heading={isEdit ? `Edit the <$ camelCase(entityName) $> #: ${<$ camelCase(entityName) $>?.id}` : 'Add new <$ camelCase(entityName) $>'}
+          description={isEdit ? 'Update the data of the <$ camelCase(entityName) $>.' : 'Create a new <$ camelCase(entityName) $> for your system.'}
+          url={<$ camelCase(entityNamePlural) $>.index().url}
+        >
+          <Button type={'submit'} disabled={isSubmitting} className={'btn'}>
+            {isEdit ? <IconUpdate className="h-6 w-6 stroke-primary-foreground" /> : <IconSaved className="h-6 w-6 stroke-primary-foreground" />}
+            {isEdit ? 'Update <$ camelCase(entityName) $>' : 'Add <$ camelCase(entityName) $>'}
+          </Button>
+        </HeadingApp>
+
+        <Card className={'border-0'}>
+          <CardContent>
+            <div className={'flex flex-wrap'}>
+            <% for(let input of inputs) { %>
+              <% if(input.type != "textarea" || input.type != "select" || input.type != "checkbox" || input.type != "radio" || input.type != "number") { %>
+              <div className={'my-2 w-full space-y-2 !px-1 lg:w-4/12'}>
+                <Label><$ project.getTranslation("en", input.label) $></Label>
+                <Input
+                  disabled={isSubmitting}
+                  type={'text'}
+                  name={'<$ input.name $>'}
+                  value={data.<$ input.name $>}
+                  onChange={(e) => setData('<$ input.name $>', e.target.value)}
+                />
+                <InputError message={errors.<$ input.name $>} className="mt-2" />
+              </div>
+              <% } %>
+              <% if(input.type == "number") { %>
+              <div className={'my-2 w-full space-y-2 !px-1 lg:w-4/12'}>
+                <Label><$ project.getTranslation("en", input.label) $></Label>
+                <Input
+                  disabled={isSubmitting}
+                  type={'number'}
+                  name={'<$ input.name $>'}
+                  value={data.<$ input.name $> == 0 ? '' : data.<$ input.name $>}
+                  onChange={(e) => setData('<$ input.name $>', e.target.value === '' ? 0 : Number(e.target.value) < 0 ? 0 : Number(e.target.value))}
+                />
+                <InputError message={errors.<$ input.name $>} className="mt-2" />
+              </div>
+              <% } %>
+              <% if(input.type == "textarea") { %>
+              <div className={'my-2 w-full space-y-2 !px-1 lg:w-8/12'}>
+                <Label><$ project.getTranslation("en", input.label) $></Label>
+                <Textarea
+                  disabled={isSubmitting}
+                  className="form-control"
+                  name={'<$ input.name $>'}
+                  value={data.<$ input.name $>}
+                  onChange={(e: any) => setData('<$ input.name $>', e.target.value)}
+                />
+                <InputError message={errors.<$ input.name $>} className="mt-2" />
+              </div>
+              <% } %>
+              <% if(input.type == "select") { %>
+              <div className={'my-2 w-full space-y-2 !px-1 lg:w-4/12'}>
+                <Label><$ project.getTranslation("en", input.label) $></Label>
+                <Select
+                  disabled={isSubmitting}
+                  name={'<$ input.name $>'}
+                  value={String(data.<$ input.name $>)}
+                  onValueChange={(value) => setData('<$ input.name $>', Number(value))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccione el municipio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {/*{examples.map((example) => (
+                        <SelectItem key={example.id} value={String(example.id)}>
+                          {example.name}
+                        </SelectItem>
+                      ))}*/}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <InputError message={errors.<$ input.name $>} className="mt-2" />
+              </div>
+              <% } %>
+              <% if(input.type == "checkbox") { %>
+              <div className={'my-2 w-full space-y-2 !px-1 lg:w-4/12'}>
+                <Label className="inline-flex w-full cursor-pointer items-center rounded-sm px-2 py-2 hover:bg-border/30">
+                  <Checkbox
+                    checked={data.<$ input.name $>}
+                    onCheckedChange={() => setData('<$ input.name $>', !data.<$ input.name $>)}
+                    className="h-6 w-6 cursor-pointer rounded-xl bg-background text-primary focus:ring-2 focus:ring-border"
+                  />
+                  <span className="ml-4 cursor-pointer text-foreground uppercase"><$ project.getTranslation("en", input.label) $></span>
+                </Label>
+              </div>
+              <% } %>
+            <% } %>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </form>
+  );
+};

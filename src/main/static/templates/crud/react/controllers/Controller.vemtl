@@ -1,0 +1,76 @@
+<?php
+<% let entityName = this.crud.model.name %>
+<% let entityNamePlural = this.crud.model.plural %>
+<% let routeName = this.routeName %>
+<% let controllerName = this.controllerName %>
+<% const camelCase = this.require('camelCase') %>
+namespace App\Http\Controllers\<$ entityNamePlural $>;
+
+use App\Http\Controllers\Controller;
+use App\Models\<$ entityName $>;
+use App\Http\Requests\<$ entityName $>StoreRequest;
+use App\Http\Requests\<$ entityName $>UpdateRequest;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class <$ controllerName $> extends Controller {
+
+  public function index(Request $request) {
+    $this->authorize('view-any', <$ entityName $>::class);
+    $search = $request->get('search', '');
+
+    $<$ entityNamePlural $> = <$ entityName $>::when($request->search, function ($query, $search) {
+      return $query->where('id', 'ilike', "%$search%");
+    })->get();
+
+    return Inertia::render('<$ this.viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/index', [
+      'search' => $search,
+      '<$ camelCase(entityName) $>List' => $<$ entityNamePlural $>,
+    ]);
+  }
+
+  public function create(Request $request) {
+   $this->authorize('create', <$ entityName $>::class);
+
+    return Inertia::render('<$ this.viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/create');
+  }
+
+  public function store(<$ entityName $>StoreRequest $request) {
+    $this->authorize('create', <$ entityName $>::class);
+    $validated = $request->validated();
+    <$ entityName $>::create($validated);
+
+    return redirect()->route('<$ routeName $>.index');
+  }
+
+  public function show(Request $request, <$ entityName $> $<$ camelCase(entityName) $>) {
+    $this->authorize('view', $<$ camelCase(entityName) $>);
+
+    return Inertia::render('<$ this.viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/show', [
+      '<$ camelCase(entityName) $>' => $<$ camelCase(entityName) $>,
+    ]);
+  }
+
+  public function edit(Request $request, <$ entityName $> $<$ camelCase(entityName) $>) {
+    $this->authorize('update', $<$ camelCase(entityName) $>);
+
+    return Inertia::render('<$ this.viewsFolder $>/<$ this.changeCase.paramCase(this.crud.model.plural) $>/edit', [
+      '<$ camelCase(entityName) $>' => $<$ camelCase(entityName) $>,
+    ]);
+  }
+
+  public function update(<$ entityName $>UpdateRequest $request, <$ entityName $> $<$ camelCase(entityName) $>) {
+    $this->authorize('update', $<$ camelCase(entityName) $>);
+    $validated = $request->validated();
+    $<$ camelCase(entityName) $>->update($validated);
+
+    return redirect()->route('<$ routeName $>.index');
+  }
+
+  public function destroy(<$ entityName $> $<$ camelCase(entityName) $>) {
+    $this->authorize('delete', $<$ camelCase(entityName) $>);
+    $<$ camelCase(entityName) $>->delete();
+
+    return redirect()->route('<$ routeName $>.index');
+  }
+}

@@ -1,0 +1,39 @@
+import { usePage } from '@inertiajs/react';
+import { SharedData } from '@/types';
+
+/**
+ * usePermissions.
+ */
+export function usePermissions() {
+  const { auth } = usePage<SharedData>().props;
+  const permissions = auth?.permissions || [];
+
+  /**
+   * Check if user has permission.
+   *
+   * @param permission
+   */
+  const can = (permission: string): boolean => {
+    return auth?.full_access ? true : permissions.some((p: string) => p === permission);
+  };
+
+  /**
+   * Check if user has permission.
+   *
+   * @param permission
+   */
+  const hasPermission = (permission: string): boolean => {
+    return auth?.full_access ? true : permissions.some((p: string) => p === permission);
+  };
+
+  /**
+   * Check if user has permission.
+   *
+   * @param role
+   */
+  const hasRole = (role: string): boolean => {
+    return auth?.full_access ? true : permissions.some((p: string) => p === role);
+  };
+
+  return { permissions, can, hasPermission, hasRole };
+}

@@ -1,15 +1,15 @@
-import Table from './Table'
-import Input from './crud/Input'
-import ColumnData from './data/ColumnData'
-import DataComparator from './services/DataComparator'
-import ColumnTypeList from './column-types/base/ColumnTypeList'
-import DataComparisonLogger from './services/DataComparisonLogger'
-import Model from './Model'
-import ColumnsDefaultDataList, { ColumnDefaultData } from './column-types/default/ColumnsDefaultDataList'
-import Relationship from './Relationship'
-import AbstractSchemaModel from './composition/AbstractSchemaModel'
-import Index from './Index'
-import IndexColumn from './IndexColumn'
+import Table from "./Table"
+import Input from "./crud/Input"
+import ColumnData from "./data/ColumnData"
+import DataComparator from "./services/DataComparator"
+import ColumnTypeList from "./column-types/base/ColumnTypeList"
+import DataComparisonLogger from "./services/DataComparisonLogger"
+import Model from "./Model"
+import ColumnsDefaultDataList, { ColumnDefaultData } from "./column-types/default/ColumnsDefaultDataList"
+import Relationship from "./Relationship"
+import AbstractSchemaModel from "./composition/AbstractSchemaModel"
+import Index from "./Index"
+import IndexColumn from "./IndexColumn"
 
 export default class Column extends AbstractSchemaModel implements SchemaModel {
     id: string
@@ -57,33 +57,32 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
         return {
             table: () => this.belongsTo(Table),
             inputs: () => this.hasMany(Input).cascadeDelete(),
-            referencedIndexes: () => this.hasMany(Index, 'referencesColumnId').cascadeDelete(),
+            referencedIndexes: () => this.hasMany(Index, "referencesColumnId").cascadeDelete(),
             columnIndexes: () => this.belongsToMany(Index, IndexColumn).cascadeDetach(),
 
             // Relationships with Relationship class
-            relationshipsByForeignKey: () => this.hasMany(Relationship, 'foreignKeyId').cascadeDelete(),
-            relationshipsByOwnerKey: () => this.hasMany(Relationship, 'ownerKeyId').cascadeDelete(),
-            relationshipsByParentKey: () => this.hasMany(Relationship, 'parentKeyId').cascadeDelete(),
-            relationshipsByForeignPivotKey: () => this.hasMany(Relationship, 'foreignPivotKeyId').cascadeDelete(),
-            relationshipsByRelatedPivotKey: () => this.hasMany(Relationship, 'relatedPivotKeyId').cascadeDelete(),
-            relationshipsByMorphIdColumn: () => this.hasMany(Relationship, 'idColumnId').cascadeDelete(),
-            relationshipsByMorphTypeColumn: () => this.hasMany(Relationship, 'typeColumnId').cascadeDelete(),
+            relationshipsByForeignKey: () => this.hasMany(Relationship, "foreignKeyId").cascadeDelete(),
+            relationshipsByOwnerKey: () => this.hasMany(Relationship, "ownerKeyId").cascadeDelete(),
+            relationshipsByParentKey: () => this.hasMany(Relationship, "parentKeyId").cascadeDelete(),
+            relationshipsByForeignPivotKey: () => this.hasMany(Relationship, "foreignPivotKeyId").cascadeDelete(),
+            relationshipsByRelatedPivotKey: () => this.hasMany(Relationship, "relatedPivotKeyId").cascadeDelete(),
+            relationshipsByMorphIdColumn: () => this.hasMany(Relationship, "idColumnId").cascadeDelete(),
+            relationshipsByMorphTypeColumn: () => this.hasMany(Relationship, "typeColumnId").cascadeDelete(),
         }
     }
-    
 
     static created(column: Column) {
         column.faker = column.getDefaultFaker()
         column.save()
-        
-        if(typeof column.order === "undefined") {
+
+        if (typeof column.order === "undefined") {
             column.reorder()
         }
     }
 
     static deleting(column: Column) {
         column.columnIndexes.forEach((index: Index) => {
-            if(index.includesOnlyColumn(column)) {
+            if (index.includesOnlyColumn(column)) {
                 index.delete()
             }
         })
@@ -91,19 +90,19 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
 
     reorder(): void {
         this.table.fixAllColumnsOrder()
-        
+
         const tableColumns = this.table.getOrderedColumns(),
             firstTableDateColumn = this.table.getFirstDefaultDateColumn()
 
-        if(!firstTableDateColumn) {
+        if (!firstTableDateColumn) {
             this.sendToBottom()
             return
         }
 
         let newColumnOrder = firstTableDateColumn.order
 
-        tableColumns.forEach(column => {
-            if(column.order < newColumnOrder || this.id == column.id) return
+        tableColumns.forEach((column) => {
+            if (column.order < newColumnOrder || this.id == column.id) return
 
             column.incrementOrder()
         })
@@ -123,7 +122,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
 
         const lastColumn = this.table.getLastColumn()
 
-        if(lastColumn) {
+        if (lastColumn) {
             this.order = lastColumn.order
             lastColumn.order = this.order - 1
 
@@ -138,7 +137,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     saveFromInterface() {
         let creating = false
 
-        if(!this.isSaved()) creating = true
+        if (!this.isSaved()) creating = true
 
         this.save()
 
@@ -146,20 +145,17 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     remove() {
-        if(this.isNew()) {
+        if (this.isNew()) {
             return this.delete()
         }
-        
+
         this.removed = true
 
         this.save()
     }
 
     isDefaultLaravelPrimaryKey(): boolean {
-        return this.isAutoIncrement() 
-            && this.name === 'id'
-            && this.type === 'bigInteger'
-            && this.unsigned === true
+        return this.isAutoIncrement() && this.name === "id" && this.type === "bigInteger" && this.unsigned === true
     }
 
     isPrimaryKey(): boolean {
@@ -167,15 +163,15 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isNotPrimaryKey(): boolean {
-        return ! this.isPrimaryKey()
+        return !this.isPrimaryKey()
     }
 
     isNotAutoIncrement(): boolean {
-        return ! this.isAutoIncrement()
+        return !this.isAutoIncrement()
     }
 
     isAutoIncrement(): boolean {
-        return !! this.autoIncrement
+        return !!this.autoIncrement
     }
 
     isForeignKey(): boolean {
@@ -184,14 +180,14 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
 
     isForeign(): boolean {
         const foreignIndexes = this.table.getForeignIndexes()
-        
-        return foreignIndexes.some(index => index.indexColumns.map((column: Column) => column.id).includes(this.id))
+
+        return foreignIndexes.some((index) => index.indexColumns.map((column: Column) => column.id).includes(this.id))
     }
 
     isUniqueFromIndex(): boolean {
         const uniqueIndexes = this.table.getUniqueIndexes()
 
-        return uniqueIndexes.some(index => index.indexColumns.map((column: Column) => column.id).includes(this.id))
+        return uniqueIndexes.some((index) => index.indexColumns.map((column: Column) => column.id).includes(this.id))
     }
 
     isUnique(): boolean {
@@ -199,13 +195,13 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isImplicitlyUnique(): boolean {
-        return !! this.unique
+        return !!this.unique
     }
 
     implicitUniqueWasRemoved(): boolean {
         const schemaStateUnique = this.schemaState && this.schemaState.unique
 
-        return schemaStateUnique && ! this.unique
+        return schemaStateUnique && !this.unique
     }
 
     isSpecialPrimaryKey(): boolean {
@@ -213,11 +209,11 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isDefaultLaravelTimestamp(): boolean {
-        return this.name === 'created_at' || this.name === 'updated_at'
+        return this.name === "created_at" || this.name === "updated_at"
     }
 
     isTextual(): boolean {
-        return ['string', 'text', 'char', 'date', 'datetime', 'timestamp'].includes(this.type)
+        return ["string", "text", "char", "date", "datetime", "timestamp"].includes(this.type)
     }
 
     isDefaultDate(): boolean {
@@ -225,7 +221,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isCreatedAt(): boolean {
-        return this.name === 'created_at'
+        return this.name === "created_at"
     }
 
     isOfTypeUuid(): boolean {
@@ -237,15 +233,15 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isDeletedAt(): boolean {
-        return this.name === 'deleted_at'
+        return this.name === "deleted_at"
     }
 
     isUpdatedAt(): boolean {
-        return this.name === 'updated_at'
+        return this.name === "updated_at"
     }
 
     hasFaker(): boolean {
-        return !! this.faker
+        return !!this.faker
     }
 
     hasBelongsToRelationsWithModel(model: Model): boolean {
@@ -257,7 +253,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     getBelongsToRelationsWithModel(model: Model): Relationship[] {
-        return this.getBelongsToRelations().filter(relationship => relationship.relatedModelId === model.id)
+        return this.getBelongsToRelations().filter((relationship) => relationship.relatedModelId === model.id)
     }
 
     hasBelongsToRelations(): boolean {
@@ -269,21 +265,20 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     getBelongsToRelations(): Relationship[] {
-        return this.relationshipsByForeignKey
-            .filter(relationship => relationship.type === 'BelongsTo') || []
+        return this.relationshipsByForeignKey.filter((relationship) => relationship.type === "BelongsTo") || []
     }
 
     hasImplicitIndex(): boolean {
-        return !! this.index
+        return !!this.index
     }
 
     changedOnlyImplicitUnique(): boolean {
         const dataComparisonMap = this.dataComparisonMap(this)
-        
+
         let changedOnlyImplicitUnique = true
 
-        Object.keys(dataComparisonMap).forEach(key => {
-            if(key !== 'unique' && dataComparisonMap[key]) changedOnlyImplicitUnique = false
+        Object.keys(dataComparisonMap).forEach((key) => {
+            if (key !== "unique" && dataComparisonMap[key]) changedOnlyImplicitUnique = false
         })
 
         return changedOnlyImplicitUnique
@@ -294,14 +289,14 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     hasLocalChanges(): boolean {
-        if(!this.schemaState) return false
+        if (!this.schemaState) return false
 
         return this.hasDataChanges(this)
     }
 
     hasSchemaChanges(schemaData: any): boolean {
-        if(!this.schemaState) return true 
-        
+        if (!this.schemaState) return true
+
         // Order is only checked here because Laravel migrations don't support changing the order of columns
         const orderWasChanged = DataComparator.numbersAreDifferent(this.schemaState.order, schemaData.order)
 
@@ -311,11 +306,11 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     hasDataChanges(comparisonData: any): boolean {
         const dataComparisonMap = this.dataComparisonMap(comparisonData)
 
-        return Object.keys(dataComparisonMap).some(key => dataComparisonMap[key])
+        return Object.keys(dataComparisonMap).some((key) => dataComparisonMap[key])
     }
 
     applyChanges(data: any): boolean {
-        if(!this.hasSchemaChanges(data)) return false
+        if (!this.hasSchemaChanges(data)) return false
 
         this.name = data.name
         this.order = data.order
@@ -330,16 +325,16 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
         this.places = data.places
         this.options = data.options
 
-        if(!this.defaultIsRaw) {
+        if (!this.defaultIsRaw) {
             this.default = data.default
         }
 
-        if(this.isUlid) {
-            this.type = 'ulid'
+        if (this.isUlid) {
+            this.type = "ulid"
         }
 
-        if(this.isUuid) {
-            this.type = 'uuid'
+        if (this.isUuid) {
+            this.type = "uuid"
         }
 
         this.fillSchemaState()
@@ -360,7 +355,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     /**
-     * The next two methods (buildSchemaState and dataComparisonMap) are extremely 
+     * The next two methods (buildSchemaState and dataComparisonMap) are extremely
      * important to keep the state of the schema,
      * and both need to reflect the same data structure to avoid false positives when
      * comparing the data between the schema state and the current state.
@@ -413,17 +408,17 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     getAfter(): string {
-        if(!this.hasPreviousColumn()) return null
+        if (!this.hasPreviousColumn()) return null
 
         return this.getPreviousColumn().name
     }
 
     isNotForeignIndex(): boolean {
-        return this.index && ! this.isForeign()
+        return this.index && !this.isForeign()
     }
 
     hasPreviousColumn(): boolean {
-        return !! this.getPreviousColumn()
+        return !!this.getPreviousColumn()
     }
 
     getPreviousColumn(): Column {
@@ -435,7 +430,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isEnum(): boolean {
-        return this.type === 'enum'
+        return this.type === "enum"
     }
 
     isJson(): boolean {
@@ -443,7 +438,7 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isSet(): boolean {
-        return this.type === 'set'
+        return this.type === "set"
     }
 
     old(): Column {
@@ -453,23 +448,23 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
 
         return oldColumn
     }
-    
+
     isFloatingPointNumber(): boolean {
-        return ['decimal', 'double', 'float', 'unsignedDecimal'].includes(this.type)
+        return ["decimal", "double", "float", "unsignedDecimal"].includes(this.type)
     }
 
     isInvalid(): boolean {
-        return ! this.isValid()
+        return !this.isValid()
     }
 
     isValid(): boolean {
-        return !! (this.name && this.type)
+        return !!(this.name && this.type)
     }
 
     getDefaultFaker(): string {
         let defaultSettingsByName = this.getDefaultSettingsByName()
 
-        if(defaultSettingsByName && defaultSettingsByName.faker != 'undefined') return defaultSettingsByName.faker
+        if (defaultSettingsByName && defaultSettingsByName.faker != "undefined") return defaultSettingsByName.faker
 
         return this.getFakerByType()
     }
@@ -477,15 +472,15 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     getDefaultInputType(): string {
         let defaultSettingsByName = this.getDefaultSettingsByName()
 
-        if(defaultSettingsByName && typeof defaultSettingsByName.inputType !== 'undefined') return defaultSettingsByName.inputType
+        if (defaultSettingsByName && typeof defaultSettingsByName.inputType !== "undefined") return defaultSettingsByName.inputType
 
-        return this.getInputTypeByColumnType() || 'text'
+        return this.getInputTypeByColumnType() || "text"
     }
 
     getInputTypeByColumnType(): string {
         let type = this.getType()
 
-        if(type && type.inputType) return type.inputType
+        if (type && type.inputType) return type.inputType
     }
 
     cannotGenerateDefaultInputByOptions(): boolean {
@@ -494,14 +489,14 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
 
     canGenerateDefaultInputByOptions(): boolean {
         let defaultSettingsByName = this.getDefaultSettingsByName() as any
-    
-        if(defaultSettingsByName && defaultSettingsByName.avoidInputGenerationByDefault) return false
-    
+
+        if (defaultSettingsByName && defaultSettingsByName.avoidInputGenerationByDefault) return false
+
         return true
     }
 
     generateDefaultOptions(): void {
-        if(!this.mustHaveOptions()) return
+        if (!this.mustHaveOptions()) return
 
         this.options = this.getDefaultOptions()
     }
@@ -509,11 +504,11 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     getDefaultForTemplate(): string {
         let type = this.getType()
 
-        if(this.defaultIsRaw) return this.default
+        if (this.defaultIsRaw) return this.default
 
-        if(type.defaultValueTypeIsString) {
+        if (type.defaultValueTypeIsString) {
             // escape single quotes
-            if(this.default && typeof this.default === 'string') {
+            if (this.default && typeof this.default === "string") {
                 this.default = this.default.replace(/'/g, "\\'")
             }
 
@@ -526,17 +521,17 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     getDefaultOptions(): string[] {
         let defaultSettingsByName = this.getDefaultSettingsByName()
 
-        if(defaultSettingsByName && typeof defaultSettingsByName.inputOptions !== 'undefined') return defaultSettingsByName.inputOptions
+        if (defaultSettingsByName && typeof defaultSettingsByName.inputOptions !== "undefined") return defaultSettingsByName.inputOptions
 
         return []
     }
 
     getDefaultSettingsByName(name?: string): ColumnDefaultData {
-        if(!name) name = this.name
+        if (!name) name = this.name
 
         const defaultData = ColumnsDefaultDataList.getSettingsByColumnName(name)
 
-        if(!defaultData) return null
+        if (!defaultData) return null
 
         return defaultData
     }
@@ -544,17 +539,17 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     getFakerByType(): string {
         let type = this.getType()
 
-        if(type && type.faker) return type.faker
+        if (type && type.faker) return type.faker
 
-        return 'fake()->word()'
+        return "fake()->word()"
     }
 
     getDefaultUniqueFaker() {
         let defaultFaker = this.getDefaultFaker()
 
-        if(!defaultFaker) return ''
+        if (!defaultFaker) return ""
 
-        return defaultFaker.replace('fake()->', 'fake()->unique->')
+        return defaultFaker.replace("fake()->", "fake()->unique->")
     }
 
     getType(): any {
@@ -569,13 +564,13 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
         const lastValue = this.type
         const defaultColumnData = this.getDefaultSettingsByName()
 
-        if(!defaultColumnData || this.type) return
-        
+        if (!defaultColumnData || this.type) return
+
         this.type = defaultColumnData.type
 
-        if(defaultColumnData.length) this.length = defaultColumnData.length
-        if(defaultColumnData.nullable) this.nullable = defaultColumnData.nullable
-        if(defaultColumnData.faker) this.faker = defaultColumnData.faker
+        if (defaultColumnData.length) this.length = defaultColumnData.length
+        if (defaultColumnData.nullable) this.nullable = defaultColumnData.nullable
+        if (defaultColumnData.faker) this.faker = defaultColumnData.faker
 
         this.onTypeChanged({ lastValue, newValue: this.type })
         this.generateDefaultOptions()
@@ -584,24 +579,24 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     getFakerForTemplate() {
         let faker: string = this.faker,
             length = this.length || 255,
-            defaultOrFirst: string = this.default || (this.options?.length ? this.options[0] : '')
+            defaultOrFirst: string = this.default || (this.options?.length ? this.options[0] : "")
 
-        faker = faker.replace('{LENGTH}', String(length))
-        faker = faker.replace('{DEFAULT_OR_FIRST}', defaultOrFirst)
+        faker = faker.replace("{LENGTH}", String(length))
+        faker = faker.replace("{DEFAULT_OR_FIRST}", defaultOrFirst)
 
-        faker = faker.replace(/\$faker/g, '$this->faker').replace(/(Str::)/g, '\\Str::')
+        faker = faker.replace(/\$faker/g, "$this->faker").replace(/(Str::)/g, "\\Str::")
 
         return faker
     }
 
     logDataComparison() {
-        console.log('Showing changes for column ' + this.name + ' on table ' + this.table.name)
+        console.log("Showing changes for column " + this.name + " on table " + this.table.name)
 
         DataComparisonLogger.setInstance(this).log()
     }
-    
+
     isUnsigned(): boolean {
-        return !! this.unsigned
+        return !!this.unsigned
     }
 
     getForeignType(): string {
@@ -611,17 +606,17 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     isHiddenForCrudCreation(): boolean {
-        if(this.name === 'password') return false
+        if (this.name === "password") return false
 
-        if(this.cannotGenerateDefaultInputByOptions()) return true
+        if (this.cannotGenerateDefaultInputByOptions()) return true
 
         return false
     }
-    
-    referencesModel(model: Model): boolean {
-        if(!this.isForeign()) return false;
 
-        return this.relationshipsByForeignKey.some(relationship => relationship.relatedModelId === model.id)
+    referencesModel(model: Model): boolean {
+        if (!this.isForeign()) return false
+
+        return this.relationshipsByForeignKey.some((relationship) => relationship.relatedModelId === model.id)
     }
 
     hasDuplicatedName(): boolean {
@@ -633,31 +628,29 @@ export default class Column extends AbstractSchemaModel implements SchemaModel {
     }
 
     onTypeChanged({ lastValue, newValue }): void {
-        const isSpecialType = ['uuid', 'ulid'].includes(newValue) || ['uuid', 'ulid'].includes(lastValue)
+        const isSpecialType = ["uuid", "ulid"].includes(newValue) || ["uuid", "ulid"].includes(lastValue)
 
-        if(isSpecialType) {
-            this.isUuid = newValue === 'uuid'
-            this.isUlid = newValue === 'ulid'
+        if (isSpecialType) {
+            this.isUuid = newValue === "uuid"
+            this.isUlid = newValue === "ulid"
 
-            if(this.isUuid || this.isUlid) {
+            if (this.isUuid || this.isUlid) {
                 this.unsigned = false
                 this.autoIncrement = false
             }
         }
-        
+
         if (!lastValue?.length) {
             let defaultColumnFaker = this.getDefaultFaker(),
                 defaultColumnUniqueFaker = this.getDefaultUniqueFaker()
 
-            this.faker = this.unique
-                ? defaultColumnUniqueFaker
-                : defaultColumnFaker
+            this.faker = this.unique ? defaultColumnUniqueFaker : defaultColumnFaker
         }
 
         this.saveFromInterface()
     }
-    
+
     hasLengthDisabled(): boolean {
-        return typeof this.type === 'string' && this.type.toLowerCase().includes('integer')
+        return typeof this.type === "string" && this.type.toLowerCase().includes("integer")
     }
 }

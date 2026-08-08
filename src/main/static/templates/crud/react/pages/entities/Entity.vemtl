@@ -1,0 +1,22 @@
+<% let entityName = this.entityName %>
+<% let entityInitial = this.entityInitial %>
+<% let columns = this.columns %>
+<% let resolveTsType = this.resolveTsType %>
+<% const camelCase = this.require('camelCase') %>
+/**
+ * <$ entityName $>.
+ */
+export class <$ entityName $>Entity {
+<% for(let column of columns) { %>
+  <$ column.name $>!: <$ resolveTsType(column.type).tsType $>
+<% } %>
+}
+
+/**
+ * <$ entityName $> Initial Values.
+ */
+export const <$ camelCase(entityName) $>EntityInitial = {
+<% for(let column of columns) { %>
+  <$ column.name $>: <$ resolveTsType(column.type).initialValue $>,
+<% } %>
+};

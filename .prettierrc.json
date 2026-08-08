@@ -1,7 +1,9 @@
 {
-    "endOfLine": "auto",
-    "semi": false,
-    "tabWidth": 4,
-    "vueIndentScriptAndStyle": true,
-    "singleQuote": false
+  "endOfLine": "auto",
+  "semi": false,
+  "tabWidth": 4,
+  "printWidth": 150,
+  "bracketSpacing": true,
+  "vueIndentScriptAndStyle": true,
+  "singleQuote": false
 }

@@ -7,7 +7,6 @@ import RoutesRenderable from "@Renderer/codegen/sequential/services/routes/Route
 import ApiRoutesRenderable from "@Renderer/codegen/sequential/services/routes/ApiRoutesRenderable"
 
 export default class ProjectConnector {
-
     project: Project
     projectSettings: ProjectSettings
 
@@ -17,16 +16,16 @@ export default class ProjectConnector {
 
     async connect(settings: ProjectSettings) {
         try {
-            if(this.project.connectionFinished) {
+            if (this.project.connectionFinished) {
                 const projectSettings = settings || this.project.settings
                 this.setProjectSettingsDefaults(projectSettings)
 
                 return await this.project.save()
             }
-            
+
             this.projectSettings = settings
             this.setProjectSettingsDefaults(settings)
-    
+
             await this.createVemtoFolder()
             await this.doFirstSchemaSync()
             await this.generateBasicProjectData()
@@ -46,39 +45,47 @@ export default class ProjectConnector {
     }
 
     async createNecessaryFiles() {
-        if(!this.projectSettings.isFreshLaravelProject) {
+        if (!this.projectSettings.isFreshLaravelProject) {
             console.log("Skip creating files for non-fresh Laravel project")
             return
         }
 
         console.log("Creating files for fresh Laravel project")
 
-        // Render the bootstrap/app.php file (ignoring conflicts)
-        const renderableBootstrapApp = new BootstrapAppRenderable()
-        await renderableBootstrapApp.render(true)
+        if (!this.isReact()) {
+            // Render the bootstrap/app.php file (ignoring conflicts)
+            const renderableBootstrapApp = new BootstrapAppRenderable()
+            await renderableBootstrapApp.render(true)
 
-        const renderableRoutes = new RoutesRenderable()
-        await renderableRoutes.render(true)
+            const renderableRoutes = new RoutesRenderable()
+            await renderableRoutes.render(true)
 
-        const renderableApiRoutes = new ApiRoutesRenderable()
-        await renderableApiRoutes.render(true)
+            const renderableApiRoutes = new ApiRoutesRenderable()
+            await renderableApiRoutes.render(true)
+        }
 
-        if(this.isBreezeLivewire()) {
+        if (this.isReact()) {
+            console.log("Creating files for React project")
+            const templatesPath = "file-templates/starter-kits/react/resources"
+            await Main.API.copyInternalFolderToProject(templatesPath, "/")
+        }
+
+        if (this.isBreezeLivewire()) {
             console.log("Creating files for Breeze project")
             const templatesPath = "file-templates/starter-kits/breeze-livewire/resources"
             await Main.API.copyInternalFolderToProject(templatesPath, "/")
         }
 
-        if(this.isJetstreamLivewire()) {
+        if (this.isJetstreamLivewire()) {
             console.log("Creating files for Jetstream Livewire project")
             const templatesPath = "file-templates/starter-kits/jetstream-livewire/resources"
-            
+
             await Main.API.copyInternalFolderToProject(templatesPath, "/")
         }
     }
 
     async doFirstSchemaSync() {
-        if(this.project.connectionFinished) {
+        if (this.project.connectionFinished) {
             throw new Error("Project connection is already finished, cannot do first schema sync")
         }
 
@@ -89,14 +96,16 @@ export default class ProjectConnector {
         return await schemaBuilder.build(syncTables, syncModels)
     }
 
+    isReact() {
+        return this.projectSettings.uiStarterKit === ProjectUIStarterKit.REACT && this.projectSettings.usesReact
+    }
+
     isBreezeLivewire() {
-        return this.projectSettings.uiStarterKit === ProjectUIStarterKit.BREEZE
-            && this.projectSettings.usesLivewire
+        return this.projectSettings.uiStarterKit === ProjectUIStarterKit.BREEZE && this.projectSettings.usesLivewire
     }
 
     isJetstreamLivewire() {
-        return this.projectSettings.uiStarterKit === ProjectUIStarterKit.JETSTREAM 
-            && this.projectSettings.usesLivewire
+        return this.projectSettings.uiStarterKit === ProjectUIStarterKit.JETSTREAM && this.projectSettings.usesLivewire
     }
 
     async generateBasicProjectData() {
@@ -119,5 +128,4 @@ export default class ProjectConnector {
     async organizeTables() {
         this.project.organizeTablesOfAllSectionsByRelations()
     }
-
 }
